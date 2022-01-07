@@ -48,7 +48,7 @@
  *
  */
 
-(function(factory) {
+(function (factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
     define(['jquery'], factory);
@@ -59,9 +59,9 @@
     // Browser globals
     factory(jQuery);
   }
-})(function(jQuery) {
+})(function (jQuery) {
   jQuery.extend({
-    highlight: function(
+    highlight: function (
       node,
       re,
       nodeName,
@@ -119,7 +119,7 @@
       return 0;
     },
 
-    removeDiacritcs: function(word) {
+    removeDiacritcs: function (word) {
       return word
         .replace(/[\u00c0-\u00c6]/g, 'A')
         .replace(/[\u00e0-\u00e6]/g, 'a')
@@ -142,7 +142,7 @@
     }
   });
 
-  jQuery.fn.unhighlight = function(options) {
+  jQuery.fn.unhighlight = function (options) {
     var settings = {
       className: 'highlight',
       element: 'span'
@@ -151,7 +151,7 @@
     jQuery.extend(settings, options);
 
     return this.find(settings.element + '.' + settings.className)
-      .each(function() {
+      .each(function () {
         var parent = this.parentNode;
         parent.replaceChild(this.firstChild, this);
         parent.normalize();
@@ -159,7 +159,7 @@
       .end();
   };
 
-  jQuery.fn.highlight = function(words, options, callback) {
+  jQuery.fn.highlight = function (words, options, callback) {
     var settings = {
       className: 'highlight',
       element: 'span',
@@ -174,10 +174,10 @@
     if (typeof words === 'string') {
       words = [words];
     }
-    words = jQuery.grep(words, function(word) {
+    words = jQuery.grep(words, function (word) {
       return word != '';
     });
-    words = jQuery.map(words, function(word) {
+    words = jQuery.map(words, function (word) {
       if (settings.ignoreDiacritics) {
         word = jQuery.removeDiacritcs(word);
       }
@@ -200,7 +200,7 @@
     }
     var re = new RegExp(pattern, flag);
 
-    return this.each(function() {
+    return this.each(function () {
       jQuery.highlight(
         this,
         re,
