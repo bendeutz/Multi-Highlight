@@ -108,7 +108,7 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
     //fix bug: https://github.com/yiminzme/Multi-Highlight/issues/21
     arr = inputStr.split(settings.delim)
     arr.sort();
-    inputStr = arr.join(",");
+    inputStr = arr.join(settings.delim);
 
     // (instant search mode) or (last char of input is delimiter)
     if (settings.isInstant || inputStr.slice(-1) == settings.delim) {
