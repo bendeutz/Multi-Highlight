@@ -64,7 +64,7 @@ function hl_search(addedKws, settings, tabinfo) {
         + `{className: '${cls}', wordsOnly: ${isWholeWord}, caseSensitive: ${isCasesensitive}  ` + "})";
 
     }).join(";\n");
-    console.log(code)
+    // console.log(code)
     chrome.tabs.executeScript(tabinfo.id, { code: code }, _ => chrome.runtime.lastError);
     tabinfo.style_nbr += addedKws.length;
   }
@@ -73,6 +73,7 @@ function hl_search(addedKws, settings, tabinfo) {
 
 function hl_clear(removedKws, settings, tabinfo) {
   removedKws = [].concat.apply([], removedKws) // convert 2d array to 1d (for isNewlineNewColor)
+  // console.log(`removedKws: ${removedKws}`)
 
   //fix the bug, where html elements are removed from the page
   removedKws.sort(function (a, b) {
@@ -85,7 +86,7 @@ function hl_clear(removedKws, settings, tabinfo) {
     return "$(document.body).unhighlight({className:'" + className + "'})";
   }).join(";\n");
   // console.log(`removedKws${removedKws.length}:` + removedKws);
-  console.log("REMOVE: " + code);
+  // console.log("REMOVE: " + code);
   chrome.tabs.executeScript(tabinfo.id, { code: code }, _ => chrome.runtime.lastError);
   settings.isNewlineNewColor || (tabinfo.style_nbr -= removedKws.length);
 }
@@ -145,20 +146,20 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
         removedKws = SetMinus(tabinfo.keywords, inputKws); // get tokens only occur in old input
       }
 
-      arr = inputStr.split(settings.delim);
-      for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr.length; j++) {
-          if (i < j) {
-            if (arr[i] != arr[j]) {
-              if (arr[j].startsWith(arr[i])) {
-                removedKws.push(arr[i])
-                addedKws.push(arr[i])
-                console.log("hier")
-              }
-            }
+
+      var temporaryKws = []
+      var savedKws = tabinfo.keywords;
+
+      var inputArr = inputStr.split(settings.delim)
+
+      for (let i = 0; i < inputArr.length - 1; i++) {
+        for (let j = i + 1; j < inputArr.length; j++) {
+          if (inputArr[j] != inputArr[i] && inputArr[j].startsWith(inputArr[i])) {
+            temporaryKws.push(inputArr[i])
           }
         }
       }
+      console.log(removedKws)
 
       if (option && option.refresh) {
         hl_clearall(settings, tabinfo);
@@ -169,7 +170,9 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
       }
       else {
         hl_clear(removedKws, settings, tabinfo);
+        hl_clear(temporaryKws, settings, tabinfo);
         hl_search(addedKws, settings, tabinfo);
+        hl_search(temporaryKws, settings, tabinfo);
       }
 
       html = settings.isNewlineNewColor

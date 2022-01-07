@@ -152,12 +152,8 @@
     return this.find(settings.element + '.' + settings.className)
       .each(function () {
         var parent = this.parentNode;
-        if (this.firstChild.length > 0) {
-          parent.replaceChild(this.firstChild, this);
-          parent.normalize();
-        } else {
-          //todo: this case is not working rn
-        }
+        parent.replaceChild(this.firstChild, this);
+        parent.normalize();
       })
       .end();
   };
