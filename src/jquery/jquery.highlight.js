@@ -147,7 +147,6 @@
       className: 'highlight',
       element: 'span'
     };
-
     jQuery.extend(settings, options);
 
     return this.find(settings.element + '.' + settings.className)

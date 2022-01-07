@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', function () {
       var tabkey = get_tabkey(currTab.id);
       chrome.storage.local.get(['settings', tabkey], function (result) {
         // fetch general settings
-        console.log(defaultSettings);
-        console.log(result.settings);
+        // console.log(defaultSettings);
+        // console.log(result.settings);
         var settings = Object.assign(defaultSettings, result.settings);
         var tabinfo = result[tabkey];
         var flag = { "is_change": false };

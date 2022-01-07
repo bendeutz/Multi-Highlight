@@ -34,6 +34,10 @@ function KeywordEscape(kw) {
 function hl_search(addedKws, settings, tabinfo) {
   // console.log("addedKws: " + addedKws);
 
+  addedKws.sort(function (a, b) {
+    return b.length - a.length;
+  })
+
   isWholeWord = TrueOrFalse(settings.isWholeWord);
   isCasesensitive = TrueOrFalse(settings.isCasesensitive);
 
@@ -46,7 +50,7 @@ function hl_search(addedKws, settings, tabinfo) {
         return "$(document.body).highlight(" + `'${KeywordEscape(kw)}', `
           + `{className: '${cls}', wordsOnly: ${isWholeWord}, caseSensitive: ${isCasesensitive}  ` + "})";
       }).join(";\n");
-      console.log(code);
+      // console.log("search: " + code);
       chrome.tabs.executeScript(tabinfo.id, { code: code }, _ => chrome.runtime.lastError);
     }
   } else {
@@ -55,11 +59,12 @@ function hl_search(addedKws, settings, tabinfo) {
       // if(kw.length < 1) return "";
       cls = clsPrefix + ((tabinfo.style_nbr + ind) % settings.CSS_COLORS_COUNT) + " "
         + (settings.CSSprefix3 + encodeURI(kw)); // escape special characters
+      cls = cls.replace('--', '-')
       return "$(document.body).highlight(" + `'${KeywordEscape(kw)}', `
         + `{className: '${cls}', wordsOnly: ${isWholeWord}, caseSensitive: ${isCasesensitive}  ` + "})";
 
     }).join(";\n");
-    // console.log(code);
+    // console.log(code)
     chrome.tabs.executeScript(tabinfo.id, { code: code }, _ => chrome.runtime.lastError);
     tabinfo.style_nbr += addedKws.length;
   }
@@ -68,13 +73,19 @@ function hl_search(addedKws, settings, tabinfo) {
 
 function hl_clear(removedKws, settings, tabinfo) {
   removedKws = [].concat.apply([], removedKws) // convert 2d array to 1d (for isNewlineNewColor)
+
+  //fix the bug, where html elements are removed from the page
+  removedKws.sort(function (a, b) {
+    return a.length - b.length;
+  })
+
   code = removedKws.filter(i => i).flatMap(kw => {
     // if(kw.length < 1) return "";
     className = (settings.CSSprefix3 + encodeURI(kw)).replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, "\\\\$&");
     return "$(document.body).unhighlight({className:'" + className + "'})";
   }).join(";\n");
   // console.log(`removedKws${removedKws.length}:` + removedKws);
-  // console.log("REMOVE: " + code);
+  console.log("REMOVE: " + code);
   chrome.tabs.executeScript(tabinfo.id, { code: code }, _ => chrome.runtime.lastError);
   settings.isNewlineNewColor || (tabinfo.style_nbr -= removedKws.length);
 }
@@ -105,11 +116,6 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
     var settings = result.settings;
     var tabinfo = result[tabkey];
 
-    //fix bug: https://github.com/yiminzme/Multi-Highlight/issues/21
-    arr = inputStr.split(settings.delim)
-    arr.sort();
-    inputStr = arr.join(settings.delim);
-
     // (instant search mode) or (last char of input is delimiter)
     if (settings.isInstant || inputStr.slice(-1) == settings.delim) {
       if (settings.isNewlineNewColor) {
@@ -126,6 +132,7 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
           addedKws.push(SetMinus(inputKws[i], savedKws[i]));
           removedKws.push(SetMinus(savedKws[i], inputKws[i]));
         }
+        // console.log(addedKws);
         for (i = ntypes; i < inputKws.length; ++i) {
           addedKws.push(inputKws[i]);
         }
@@ -136,6 +143,21 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
         inputKws = inputStr.split(settings.delim).filter(i => i); // filter() removes empty array elms
         addedKws = SetMinus(inputKws, tabinfo.keywords); // get tokens only occur in new input
         removedKws = SetMinus(tabinfo.keywords, inputKws); // get tokens only occur in old input
+      }
+
+      arr = inputStr.split(settings.delim);
+      for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arr.length; j++) {
+          if (i < j) {
+            if (arr[i] != arr[j]) {
+              if (arr[j].startsWith(arr[i])) {
+                removedKws.push(arr[i])
+                addedKws.push(arr[i])
+                console.log("hier")
+              }
+            }
+          }
+        }
       }
 
       if (option && option.refresh) {
@@ -151,8 +173,8 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
       }
 
       html = settings.isNewlineNewColor
-        ? inputKws.map(line => line.map(elem => `<span class="keywords">${elem}</span>`).join("")).join("")
-        : inputKws.map(elem => `<span class="keywords">${elem}</span>`).join("");
+        ? inputKws.map(line => line.map(elem => `< span class= "keywords" > ${elem}</span > `).join("")).join("")
+        : inputKws.map(elem => `<span class= "keywords" > ${elem}</span >`).join("");
       // todo: don't delete all 
       $('#kw-list>.keywords').remove();
       $(html).appendTo($('#kw-list'));
