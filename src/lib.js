@@ -64,7 +64,7 @@ function hl_search(addedKws, settings, tabinfo) {
         + `{className: '${cls}', wordsOnly: ${isWholeWord}, caseSensitive: ${isCasesensitive}  ` + "})";
 
     }).join(";\n");
-    // console.log(code)
+    console.log(code)
     chrome.tabs.executeScript(tabinfo.id, { code: code }, _ => chrome.runtime.lastError);
     tabinfo.style_nbr += addedKws.length;
   }
