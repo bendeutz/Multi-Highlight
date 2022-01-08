@@ -54,6 +54,7 @@ function hl_search(addedKws, settings, tabinfo) {
       chrome.tabs.executeScript(tabinfo.id, { code: code }, _ => chrome.runtime.lastError);
     }
   } else {
+    console.log(tabinfo.style_nbr)
     clsPrefix = settings.CSSprefix1 + " " + settings.CSSprefix2;
     code = addedKws.filter(i => i).map((kw, ind) => {
       // if(kw.length < 1) return "";
@@ -146,20 +147,37 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
         removedKws = SetMinus(tabinfo.keywords, inputKws); // get tokens only occur in old input
       }
 
-
-      var temporaryKws = []
-      var savedKws = tabinfo.keywords;
-
       var inputArr = inputStr.split(settings.delim)
 
-      for (let i = 0; i < inputArr.length - 1; i++) {
-        for (let j = i + 1; j < inputArr.length; j++) {
-          if (inputArr[j] != inputArr[i] && inputArr[j].startsWith(inputArr[i])) {
-            temporaryKws.push(inputArr[i])
+
+      for (let i = 0; i < inputArr.length; i++) {
+        for (let j = 0; j < removedKws.length; j++) {
+          if (inputArr[i] != removedKws[j] && removedKws[j].includes(inputArr[i])) {
+            if (!removedKws.includes(inputArr[i])) {
+              removedKws.push(inputArr[i])
+            } if (!addedKws.includes(inputArr[i])) {
+              addedKws.push(inputArr[i])
+            }
           }
         }
       }
+
+      for (let i = 0; i < inputArr.length; i++) {
+        for (let j = 0; j < addedKws.length; j++) {
+          if (inputArr[i] != addedKws[j] && addedKws[j].includes(inputArr[i])) {
+            if (!removedKws.includes(inputArr[i])) {
+              removedKws.push(inputArr[i])
+            } if (!addedKws.includes(inputArr[i])) {
+              addedKws.push(inputArr[i])
+            }
+          }
+        }
+      }
+
+      removedKws.filter(e => e)
+      addedKws.filter(e => e)
       console.log(removedKws)
+      console.log(addedKws)
 
       if (option && option.refresh) {
         hl_clearall(settings, tabinfo);
@@ -170,9 +188,7 @@ function handle_highlightWords_change(tabkey, option, callback = null) {
       }
       else {
         hl_clear(removedKws, settings, tabinfo);
-        hl_clear(temporaryKws, settings, tabinfo);
         hl_search(addedKws, settings, tabinfo);
-        hl_search(temporaryKws, settings, tabinfo);
       }
 
       html = settings.isNewlineNewColor

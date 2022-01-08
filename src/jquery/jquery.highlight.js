@@ -143,6 +143,7 @@
   });
 
   jQuery.fn.unhighlight = function (options) {
+    console.log("dasd")
     var settings = {
       className: 'highlight',
       element: 'span'
